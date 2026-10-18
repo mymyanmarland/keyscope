@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" width="760" height="460" role="img" aria-label="KeyScope checking models via the /models endpoint">
+  <defs>
+    <linearGradient id="tbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141026"/>
+      <stop offset="1" stop-color="#0b0817"/>
+    </linearGradient>
+    <filter id="tglow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect x="8" y="8" width="744" height="444" rx="18" fill="url(#tbg)" stroke="#8b5cf655" stroke-width="1.5"/>
+  <!-- window chrome -->
+  <circle cx="42" cy="42" r="8" fill="#f87171"/>
+  <circle cx="68" cy="42" r="8" fill="#fbbf24"/>
+  <circle cx="94" cy="42" r="8" fill="#34d399"/>
+  <text x="380" y="49" text-anchor="middle" font-size="17" fill="#a49bc9" font-family="ui-monospace,Menlo,Consolas,monospace">keyscope — model check</text>
+  <line x1="8" y1="66" x2="752" y2="66" stroke="#ffffff18"/>
+
+  <g font-family="ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace" font-size="16.5">
+    <!-- command -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="0.3s" dur="0.4s" fill="freeze"/>
+      <text x="36" y="106" fill="#67e8f9">$ curl -s $BASE_URL/v1/models \</text>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="0.7s" dur="0.4s" fill="freeze"/>
+      <text x="52" y="134" fill="#67e8f9">-H <tspan fill="#f9a8d4">"Authorization: Bearer ••••••••"</tspan></text>
+    </g>
+    <!-- response -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="1.3s" dur="0.4s" fill="freeze"/>
+      <text x="36" y="176" fill="#a49bc9">{</text>
+      <text x="52" y="204" fill="#a49bc9">"data": [</text>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="1.7s" dur="0.4s" fill="freeze"/>
+      <text x="68" y="232" fill="#c4b5fd">{"id": "relaymodels/gemini-3.8-flash"},</text>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="2.1s" dur="0.4s" fill="freeze"/>
+      <text x="68" y="260" fill="#c4b5fd">{"id": "claude-haiku-4-5"},</text>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="2.5s" dur="0.4s" fill="freeze"/>
+      <text x="68" y="288" fill="#c4b5fd">{"id": "claude-sonnet-5"},</text>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="2.9s" dur="0.4s" fill="freeze"/>
+      <text x="68" y="316" fill="#c4b5fd">{"id": "gpt-5.4-mini"},</text>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="3.3s" dur="0.4s" fill="freeze"/>
+      <text x="68" y="344" fill="#f9a8d4">… 3 more</text>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="3.6s" dur="0.4s" fill="freeze"/>
+      <text x="52" y="372" fill="#a49bc9">]</text>
+      <text x="36" y="400" fill="#a49bc9">}</text>
+    </g>
+    <!-- result line -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="4.1s" dur="0.5s" fill="freeze"/>
+      <text x="36" y="432" fill="#34d399" font-weight="700" filter="url(#tglow)">✓ 7 models available — your key can call them all</text>
+      <animate attributeName="opacity" values="1;0.75;1" dur="2.2s" begin="4.6s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <!-- blinking cursor -->
+  <rect x="700" y="418" width="11" height="22" fill="#67e8f9">
+    <animate attributeName="opacity" values="1;0;1" dur="1s" begin="4.4s" repeatCount="indefinite"/>
+  </rect>
+</svg>

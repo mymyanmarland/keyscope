@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KeyScope — API Key Model Explorer</title>
+<link rel="icon" href="mascot-key.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0716;
+  --border:rgba(255,255,255,.12);
+  --text:#f2efff;
+  --muted:#a49bc9;
+  --v1:#8b5cf6; --v2:#ec4899; --v3:#22d3ee;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --round:'Baloo 2','Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;
+}
+/* ambient background */
+.bg{position:fixed;inset:0;z-index:-2;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.55;animation:drift 18s ease-in-out infinite alternate}
+.orb.a{width:560px;height:560px;left:-150px;top:-170px;background:radial-gradient(circle,#7c3aed66,transparent 70%)}
+.orb.b{width:480px;height:480px;right:-130px;top:6%;background:radial-gradient(circle,#ec489966,transparent 70%);animation-delay:-6s}
+.orb.c{width:460px;height:460px;left:32%;bottom:-240px;background:radial-gradient(circle,#0ea5e966,transparent 70%);animation-delay:-12s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,40px) scale(1.12)}}
+.grid-overlay{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,black 30%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,black 30%,transparent 75%);
+}
+.wrap{max-width:920px;margin:0 auto;padding:44px 20px 70px}
+/* header */
+.hero{display:flex;align-items:center;gap:18px;margin-bottom:10px;animation:rise .6s ease both}
+.logo-tile{width:78px;height:78px;border-radius:24px;position:relative;overflow:hidden;flex-shrink:0;z-index:1;
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,.45));
+  transition:transform .25s}
+.logo-tile:hover{transform:rotate(-6deg) scale(1.05)}
+
+#logoImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.logo-wrap{position:relative;width:78px;height:78px;flex-shrink:0}
+.logo-wrap::before{content:'';position:absolute;inset:-16px;border-radius:50%;z-index:0;
+  background:conic-gradient(from 0deg,#8b5cf6,#ec4899,#22d3ee,#8b5cf6);
+  filter:blur(16px);opacity:.65;animation:spinGlow 7s linear infinite}
+.logo-wrap::after{content:'';position:absolute;inset:-7px;border-radius:30px;z-index:0;
+  background:conic-gradient(from 90deg,#22d3ee,#8b5cf6,#ec4899,#22d3ee);
+  filter:blur(10px);opacity:.5;animation:spinGlow 7s linear infinite reverse}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+.hero h1{font-family:var(--round);font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.1;
+  text-shadow:0 2px 20px rgba(139,92,246,.4)}
+.hero h1 .grad{background:linear-gradient(92deg,var(--v1),var(--v2) 55%,var(--v3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.65;max-width:580px}
+.tagline code{font-family:var(--mono);font-size:12.5px;color:var(--text);background:rgba(255,255,255,.07);
+  border:1px solid var(--border);padding:2px 8px;border-radius:7px}
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 26px;animation:rise .6s .08s ease both}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#cfc8ec;
+  background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));
+  border:1px solid var(--border);border-radius:999px;padding:8px 16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 18px rgba(0,0,0,.3)}
+.badge i{font-style:normal;font-size:14px}
+/* glossy cards */
+.card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  border:1px solid var(--border);border-radius:24px;padding:28px;margin-bottom:20px;
+  box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  animation:rise .6s .14s ease both;overflow:hidden}
+.card::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.1),transparent 32%)}
+.card>*{position:relative;z-index:1}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* form */
+label.lbl{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1.1px;margin:20px 0 9px}
+label.lbl:first-child{margin-top:0}
+label.lbl i{font-style:normal;font-size:15px}
+input[type=text],input[type=password]{
+  width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.13);color:var(--text);
+  border-radius:14px;padding:13px 16px;font-size:14.5px;font-family:var(--mono);outline:none;transition:.2s;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.35)}
+input::placeholder{color:#6f6694}
+input:focus{border-color:var(--v1);box-shadow:inset 0 2px 8px rgba(0,0,0,.35),0 0 0 4px rgba(139,92,246,.22);background:rgba(0,0,0,.5)}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+.presets button{
+  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.14);color:#d9d3f2;
+  border-radius:999px;padding:7px 15px;font-size:12.5px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:.18s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16)}
+.presets button:hover{border-color:var(--v3);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 16px rgba(34,211,238,.3);transform:translateY(-1px)}
+.presets button:active{transform:translateY(0)}
+.keyrow{display:flex;gap:9px}
+.keyrow input{flex:1;min-width:0}
+.ghost{background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.14);color:#d9d3f2;border-radius:13px;
+  padding:0 16px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:.18s;white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.ghost:hover{border-color:var(--v1);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 16px rgba(139,92,246,.35)}
+.remember{display:flex;align-items:center;gap:9px;margin-top:14px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+.remember input{accent-color:var(--v2);width:16px;height:16px;cursor:pointer}
+/* glossy CTA button */
+.btn{position:relative;overflow:hidden;width:100%;margin-top:20px;border:1px solid rgba(255,255,255,.25);cursor:pointer;
+  font-family:var(--round);font-size:18px;font-weight:700;letter-spacing:.2px;color:#fff;
+  padding:15px 22px;border-radius:16px;
+  background:linear-gradient(180deg,#9aa3b5 0%,#3f4759 32%,#161c2b 68%,#05070d 100%);
+  background-size:100% 160%;
+  box-shadow:0 14px 34px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -3px 10px rgba(0,0,0,.5);
+  transition:.25s;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.btn::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.06) 46%,transparent 55%)}
+.btn::after{content:'';position:absolute;top:0;left:-80%;width:55%;height:100%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:skewX(-20deg);transition:left .65s ease}
+.btn:hover{background-position:0 100%;transform:translateY(-2px);
+  box-shadow:0 18px 44px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.5),inset 0 -3px 10px rgba(0,0,0,.5)}
+.btn:hover::after{left:135%}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.65;cursor:wait;transform:none}
+.btn span{position:relative;z-index:1}
+/* status pill */
+.status{display:none;align-items:flex-start;gap:10px;margin-top:16px;padding:12px 16px;border-radius:15px;
+  font-size:13.5px;line-height:1.65;animation:rise .3s ease both;border:1px solid;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.status.show{display:flex}
+.status .dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex-shrink:0;margin-top:7px;
+  box-shadow:0 0 10px currentColor}
+.status.ok{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);color:#a7f3d0}
+.status.err{background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.4);color:#fecdd3;word-break:break-word}
+.status.work{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.35);color:#fde68a}
+.status.work .dot{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+
+/* tabs */
+.tabs{display:flex;gap:10px;margin:2px 0 22px}
+.tab{flex:1;font-family:'Baloo 2','Noto Sans Myanmar','Inter',sans-serif;font-size:16px;font-weight:700;
+  color:var(--muted);cursor:pointer;padding:13px 10px;border-radius:15px;border:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));transition:.2s}
+.tab:hover{color:var(--text);transform:translateY(-1px)}
+.tab.active{color:#fff;border-color:transparent;
+  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03)) padding-box,
+  linear-gradient(135deg,var(--v1),var(--v2)) border-box;
+  box-shadow:0 8px 22px rgba(139,92,246,.35)}
+/* guide */
+.guide{font-family:'Noto Sans Myanmar','Inter',sans-serif}
+.guide h2{font-family:'Noto Sans Myanmar','Baloo 2',sans-serif;font-size:23px;font-weight:700;margin-bottom:8px}
+.gintro{color:var(--muted);font-size:14.5px;line-height:2;margin-bottom:8px}
+.gstep{display:flex;gap:16px;align-items:center;padding:20px 0;border-top:1px solid rgba(255,255,255,.08)}
+.gnum{flex-shrink:0;width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--v1),var(--v2));
+  box-shadow:0 8px 20px rgba(139,92,246,.4),inset 0 1px 0 rgba(255,255,255,.4)}
+.gbody{flex:1;min-width:0}
+.gbody h3{font-family:'Noto Sans Myanmar','Baloo 2',sans-serif;font-size:17px;font-weight:700;margin-bottom:8px}
+.gbody p{color:#cfc8ec;font-size:13.5px;line-height:2.05}
+.gpic{flex-shrink:0;width:158px}
+.gpic svg{width:100%;height:auto;display:block}
+.gsec{margin-top:22px;padding:16px 18px;border-radius:16px;font-size:13.5px;line-height:2;
+  background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);color:#a7f3d0}
+.gsec b{color:#d1fae5}
+@media(max-width:640px){.gstep{flex-wrap:wrap}.gpic{width:140px;margin:2px auto}}
+/* guide svg animations */
+.tdot{animation:tblink 1.5s ease-in-out infinite}
+@keyframes tblink{0%,100%{opacity:.2}50%{opacity:1}}
+.pilldrop{animation:pilldrop 3s ease-in-out infinite}
+@keyframes pilldrop{0%{transform:translateY(14px);opacity:0}25%,80%{transform:translateY(0);opacity:1}100%{transform:translateY(-8px);opacity:0}}
+.keymove{animation:keyslide 4s ease-in-out infinite}
+@keyframes keyslide{0%,18%{transform:translateX(0)}48%,72%{transform:translateX(36px)}100%{transform:translateX(0)}}
+.keyglow{opacity:0;animation:keyglow 4s ease-in-out infinite}
+@keyframes keyglow{40%,62%{opacity:.9}0%,100%{opacity:0}}
+.ring{transform-box:fill-box;transform-origin:center;animation:ping 2.6s ease-out infinite}
+.ring.d2{animation-delay:1.3s}
+@keyframes ping{0%{transform:scale(.7);opacity:.9}100%{transform:scale(2.8);opacity:0}}
+.btnpulse{animation:btnpulse 2.6s ease-in-out infinite}
+@keyframes btnpulse{0%,100%{opacity:.55}50%{opacity:1}}
+.rows rect{animation:rowin 3.8s ease-in-out infinite}
+@keyframes rowin{0%{transform:translateX(-16px);opacity:0}20%,75%{transform:translateX(0);opacity:1}100%{transform:translateX(0);opacity:0}}
+.bob{animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+/* results */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.count-badge{display:inline-flex;align-items:center;gap:10px;font-family:var(--round);font-weight:700;font-size:17px;margin-right:auto}
+.count-badge .n{background:linear-gradient(135deg,var(--v1),var(--v2));color:#fff;border-radius:11px;padding:3px 13px;font-size:15px;
+  box-shadow:0 6px 16px rgba(236,72,153,.4),inset 0 1px 0 rgba(255,255,255,.4)}
+.count-badge .t{color:var(--muted);font-weight:600;font-size:13.5px;font-family:'Inter',sans-serif}
+.toolbar input[type=text]{width:210px;padding:10px 14px;font-size:13px;border-radius:12px}
+.toolbar .ghost{padding:10px 15px;border-radius:12px;font-size:12.5px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.model{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.1);border-radius:17px;
+  padding:14px 15px;display:flex;align-items:center;gap:10px;overflow:hidden;transition:.2s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);animation:rise .4s ease both}
+.model::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--v1),var(--v2),var(--v3));opacity:0;transition:.25s}
+.model::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 45%);opacity:0;transition:.25s}
+.model:hover{transform:translateY(-3px);border-color:rgba(139,92,246,.55);box-shadow:0 14px 30px rgba(0,0,0,.5),0 0 20px rgba(139,92,246,.2)}
+.model:hover::before,.model:hover::after{opacity:1}
+.model .info{flex:1;min-width:0;position:relative;z-index:1}
+.model .id{font-family:var(--mono);font-size:13px;font-weight:500;word-break:break-all;line-height:1.5}
+.model .meta{font-size:11px;color:var(--muted);margin-top:5px}
+.copy{position:relative;z-index:1;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.14);color:#b9b1d9;border-radius:10px;
+  padding:7px 12px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap;transition:.18s;flex-shrink:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.copy:hover{color:#fff;border-color:var(--v3);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 14px rgba(34,211,238,.35)}
+.empty{color:var(--muted);font-size:13.5px;padding:20px 0;text-align:center;grid-column:1/-1}
+footer{color:var(--muted);font-size:12.5px;text-align:center;margin-top:30px;line-height:1.9;animation:rise .6s .2s ease both}
+footer .lock{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  border:1px solid var(--border);border-radius:999px;padding:9px 20px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+@media(max-width:600px){
+  .wrap{padding:30px 15px 55px}
+  .hero h1{font-size:27px}
+  .logo-tile{width:64px;height:64px;border-radius:20px}
+  .logo-wrap{width:64px;height:64px}
+  .card{padding:20px}
+  .toolbar input[type=text]{width:100%;flex:1}
+  .count-badge{width:100%;margin-bottom:4px}
+}
+</style>
+</head>
+<body>
+<div class="bg"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
+<div class="grid-overlay"></div>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="logo-wrap"><div class="logo-tile"><img id="logoImg" src="mascot-key.png" alt="KeyScope logo"></div></div>
+    <div>
+      <h1>Key<span class="grad">Scope</span></h1>
+      <div class="tagline">Drop in any API base URL + key — instantly see every LLM model that key can call, via the OpenAI-compatible <code>/models</code> endpoint.</div>
+    </div>
+  </header>
+
+  <div class="badges">
+    <span class="badge"><i>🔒</i> Key never leaves your browser</span>
+    <span class="badge"><i>⚡</i> Direct <span style="font-family:var(--mono)">/models</span> call</span>
+    <span class="badge"><i>🎯</i> OpenAI-compatible relays</span>
+  </div>
+
+
+  <nav class="tabs">
+    <button class="tab active" id="tabBtnExplore" type="button" onclick="showTab('explore')">🔍 Model Explorer</button>
+    <button class="tab" id="tabBtnGuide" type="button" onclick="showTab('guide')">📖 အသုံးပြုပုံ</button>
+  </nav>
+
+  <div id="tab-explore">
+  <section class="card">
+    <label class="lbl" for="baseUrl"><i>🌐</i> API Base URL</label>
+    <input type="text" id="baseUrl" placeholder="https://api.relaymodels.com/v1" autocomplete="off" spellcheck="false"/>
+    <div class="presets" id="presets"></div>
+
+    <label class="lbl" for="apiKey"><i>🔑</i> API Key</label>
+    <div class="keyrow">
+      <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off" spellcheck="false"/>
+      <button class="ghost" id="toggleKey" type="button">Show</button>
+    </div>
+    <label class="remember"><input type="checkbox" id="remember"/> Remember key in this browser only (localStorage)</label>
+
+    <button class="btn" id="check"><span>🔍&nbsp; List available models</span></button>
+    <div id="status" class="status"></div>
+  </section>
+
+  <section class="card" id="resultsCard" style="display:none">
+    <div class="toolbar">
+      <span class="count-badge"><span class="n" id="countNum">0</span><span class="t" id="countTxt">models found</span></span>
+      <input type="text" id="filter" placeholder="Filter models…"/>
+      <button class="ghost" id="copyAll">📋 Copy all IDs</button>
+      <button class="ghost" id="dl">⬇ JSON</button>
+    </div>
+    <div id="grid"></div>
+  </section>
+  </div>
+
+  <div id="tab-guide" hidden>
+  <section class="card guide">
+    <h2>📖 အသုံးပြုပုံ</h2>
+    <p class="gintro">KeyScope သည် API key ဖြင့် သုံးနိုင်သော AI model များ ကို ဖော်ပြပေးသည်။</p>
+    <div class="gstep">
+      <div class="gnum">၁</div>
+      <div class="gbody"><h3>၁။ API Base URL ရွေးပါ</h3><p>pill တစ်ခု ကို ရွေးပါ။ ကိုယ်ပိုင် URL ရှိပါက ထည့်နိုင်သည်။</p></div>
+      <div class="gpic"><svg viewBox="0 0 160 110" aria-hidden="true">
+<rect x="10" y="28" width="140" height="36" rx="18" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/>
+<circle cx="34" cy="46" r="10" fill="none" stroke="#22d3ee" stroke-width="2.5"/>
+<path d="M24 46h20M34 36c-7 0-7 20 0 20M34 36c7 0 7 20 0 20" stroke="#22d3ee" stroke-width="1.4" fill="none"/>
+<circle class="tdot" cx="62" cy="46" r="4" fill="#8b5cf6"/>
+<circle class="tdot" cx="77" cy="46" r="4" fill="#8b5cf6" style="animation-delay:.25s"/>
+<circle class="tdot" cx="92" cy="46" r="4" fill="#8b5cf6" style="animation-delay:.5s"/>
+<rect class="pilldrop" x="52" y="76" width="56" height="22" rx="11" fill="rgba(236,72,153,.15)" stroke="#ec4899" stroke-width="2"/>
+</svg></div>
+    </div>
+    <div class="gstep">
+      <div class="gnum">၂</div>
+      <div class="gbody"><h3>၂။ API Key ထည့်ပါ</h3><p>API Key နေရာတွင် key ကို paste လုပ်ပါ။ Show ကို ရွေးရင် key ကို ကြည်နိုင်သည်။ Remember key ကို ရွေးထားရင် အဲ browser တွင် မှတ်ထားမည်။</p></div>
+      <div class="gpic"><svg viewBox="0 0 160 110" aria-hidden="true">
+<circle cx="112" cy="55" r="27" fill="rgba(255,255,255,.05)" stroke="#8b5cf6" stroke-width="2.5"/>
+<circle cx="112" cy="47" r="7" fill="#0a0716" stroke="#ec4899" stroke-width="2.5"/>
+<rect x="109.5" y="52" width="5" height="17" rx="2.5" fill="#ec4899"/>
+<circle class="keyglow" cx="112" cy="55" r="27" fill="none" stroke="#22d3ee" stroke-width="2"/>
+<g class="keymove">
+<circle cx="28" cy="55" r="10" fill="none" stroke="#fbbf24" stroke-width="4.5"/>
+<rect x="37" y="52.5" width="36" height="5" rx="2.5" fill="#fbbf24"/>
+<rect x="59" y="52.5" width="5" height="13" rx="2" fill="#fbbf24"/>
+<rect x="67" y="52.5" width="5" height="9" rx="2" fill="#fbbf24"/>
+</g>
+</svg></div>
+    </div>
+    <div class="gstep">
+      <div class="gnum">၃</div>
+      <div class="gbody"><h3>၃။ List available models ကို ရွေးပါ</h3><p>KeyScope သည် /models ကို တိုက်ရိုက် ခေါ်ယူပြီး အဲ key ဖြင့် သုံးနိုင်သော model အားလုံး ကို ဖော်ပြပေးမည်။</p></div>
+      <div class="gpic"><svg viewBox="0 0 160 110" aria-hidden="true">
+<circle class="ring" cx="80" cy="48" r="13" fill="none" stroke="#22d3ee" stroke-width="2"/>
+<circle class="ring d2" cx="80" cy="48" r="13" fill="none" stroke="#8b5cf6" stroke-width="2"/>
+<circle cx="80" cy="48" r="13" fill="rgba(255,255,255,.05)" stroke="#22d3ee" stroke-width="2"/>
+<circle cx="80" cy="48" r="4.5" fill="#ec4899"/>
+<rect class="btnpulse" x="45" y="84" width="70" height="17" rx="8.5" fill="rgba(139,92,246,.25)" stroke="#8b5cf6" stroke-width="1.5"/>
+</svg></div>
+    </div>
+    <div class="gstep">
+      <div class="gnum">၄</div>
+      <div class="gbody"><h3>၄။ Model များ ကို ကြည်ပါ</h3><p>Filter တွင် ရှာနိုင်သည်။ Copy ကို ရွေးပြီး ရယူနိုင်သည်။ Copy all IDs / JSON ဖြင့် အားလုံး ရယူနိုင်သည်။</p></div>
+      <div class="gpic"><svg viewBox="0 0 160 110" aria-hidden="true">
+<g class="rows">
+<rect x="16" y="14" width="92" height="15" rx="7.5" fill="rgba(139,92,246,.35)"/>
+<rect x="16" y="37" width="92" height="15" rx="7.5" fill="rgba(236,72,153,.35)" style="animation-delay:.3s"/>
+<rect x="16" y="60" width="92" height="15" rx="7.5" fill="rgba(34,211,238,.35)" style="animation-delay:.6s"/>
+<rect x="16" y="83" width="64" height="15" rx="7.5" fill="rgba(139,92,246,.25)" style="animation-delay:.9s"/>
+</g>
+<g class="bob">
+<circle cx="124" cy="66" r="15" fill="rgba(255,255,255,.05)" stroke="#22d3ee" stroke-width="3"/>
+<line x1="134" y1="76" x2="147" y2="89" stroke="#22d3ee" stroke-width="5" stroke-linecap="round"/>
+</g>
+</svg></div>
+    </div>
+    <div class="gsec">🔒 <b>လုံခြုံရေး</b><br>သင့် key သည် သင့် browser မှ Base URL သို့ တိုက်ရိုက် ပို့သည်။ server တွင် မသိမ်းပါ။</div>
+  </section>
+  </div>
+
+
+  <footer>
+    <span class="lock">🔒 Your key is sent only to the base URL you typed — straight from your browser. Nothing is uploaded or stored on any server.</span>
+  </footer>
+</div>
+
+<script>const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- provider presets ---------- */
+const PRESETS = [
+  ['RelayModels','https://api.relaymodels.com/v1'],
+  ['zly168','https://sapi.zly168.cn/v1'],
+  ['OpenAI','https://api.openai.com/v1'],
+  ['OpenRouter','https://openrouter.ai/api/v1'],
+  ['DeepSeek','https://api.deepseek.com/v1'],
+  ['Groq','https://api.groq.com/v1']
+];
+PRESETS.forEach(p => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = p[0];
+  b.onclick = () => { $('baseUrl').value = p[1]; };
+  $('presets').appendChild(b);
+});
+
+/* ---------- state ---------- */
+let lastModels = [];
+let lastMs = 0;
+
+/* ---------- key show/hide + remember ---------- */
+const keyInput = $('apiKey');
+$('toggleKey').onclick = () => {
+  const show = keyInput.type === 'password';
+  keyInput.type = show ? 'text' : 'password';
+  $('toggleKey').textContent = show ? 'Hide' : 'Show';
+};
+try {
+  if (localStorage.getItem('keyscope_remember') === '1') {
+    $('remember').checked = true;
+    keyInput.value = localStorage.getItem('keyscope_key') || '';
+  }
+} catch (e) {}
+function saveKey() {
+  try {
+    if ($('remember').checked) {
+      localStorage.setItem('keyscope_remember', '1');
+      localStorage.setItem('keyscope_key', keyInput.value);
+    }
+  } catch (e) {}
+}
+$('remember').onchange = () => {
+  try {
+    if ($('remember').checked) { saveKey(); }
+    else { localStorage.removeItem('keyscope_remember'); localStorage.removeItem('keyscope_key'); }
+  } catch (e) {}
+};
+keyInput.addEventListener('input', saveKey);
+
+/* ---------- status ---------- */
+function setStatus(kind, html) {
+  const el = $('status');
+  el.className = 'status show ' + kind;
+  el.innerHTML = '<span class="dot"></span><div>' + html + '</div>';
+}
+
+/* ---------- main ---------- */
+async function listModels() {
+  const base = $('baseUrl').value.trim().replace(/\/+$/, '');
+  const key = keyInput.value.trim();
+  if (!base) { setStatus('err', 'Please enter an <b>API Base URL</b> first.'); return; }
+  if (!key) { setStatus('err', 'Please enter your <b>API key</b> first.'); return; }
+  saveKey();
+  const btn = $('check');
+  btn.disabled = true;
+  setStatus('work', 'Contacting <b>' + esc(base) + '</b> &hellip;');
+  $('resultsCard').style.display = 'none';
+  lastModels = [];
+  const urls = [base + '/models'];
+  if (!/\/v1$/.test(base)) urls.push(base + '/v1/models');
+  const t0 = performance.now();
+  let res = null, usedUrl = '', netErr = false, notFound = false;
+  for (const u of urls) {
+    usedUrl = u;
+    try {
+      res = await fetch(u, { headers: { 'Authorization': 'Bearer ' + key } });
+      if (res.status === 404) { notFound = true; continue; }
+      netErr = false;
+      break;
+    } catch (e) { netErr = true; res = null; }
+  }
+  lastMs = Math.round(performance.now() - t0);
+  btn.disabled = false;
+  if (!res) {
+    if (netErr) {
+      setStatus('err', '<b>Network / CORS blocked.</b><br>Your browser could not reach<br><b>' + esc(usedUrl) + '</b><br><br>Try the curl fallback:<br><span style="font-family:var(--mono);font-size:12px">curl ' + esc(usedUrl) + ' -H "Authorization: Bearer YOUR_KEY"</span>');
+    } else {
+      setStatus('err', '<b>404 &mdash; no /models endpoint.</b><br>Tried:<br><b>' + urls.map(u => esc(u)).join('<br>') + '</b><br><br>Check the Base URL &mdash; it should look like <b>https://api.example.com/v1</b>');
+    }
+    return;
+  }
+  if (res.status === 401 || res.status === 403) {
+    setStatus('err', '<b>' + res.status + ' &mdash; key rejected.</b><br>The API refused this key. Check the key and that it belongs to<br><b>' + esc(base) + '</b>');
+    return;
+  }
+  if (!res.ok) {
+    setStatus('err', '<b>HTTP ' + res.status + '</b> from<br><b>' + esc(usedUrl) + '</b>');
+    return;
+  }
+  let data;
+  try { data = await res.json(); }
+  catch (e) { setStatus('err', '<b>Bad response.</b><br>The endpoint did not return JSON.'); return; }
+  const ids = ((data && data.data) || []).map(m => m && m.id).filter(Boolean).sort();
+  if (!ids.length) { setStatus('err', '<b>0 models</b> returned &mdash; this key may have no model access.'); return; }
+  lastModels = ids;
+  setStatus('ok', '<b>' + ids.length + ' models</b> found in ' + lastMs + ' ms');
+  $('filter').value = '';
+  renderModels('');
+  $('resultsCard').style.display = '';
+}
+$('check').onclick = listModels;
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  const ex = name === 'explore';
+  $('tab-explore').hidden = !ex;
+  $('tab-guide').hidden = ex;
+  $('tabBtnExplore').classList.toggle('active', ex);
+  $('tabBtnGuide').classList.toggle('active', !ex);
+}
+
+/* ---------- results ---------- */
+function renderModels(q) {
+  const query = (q || '').toLowerCase();
+  const list = lastModels.filter(id => id.toLowerCase().indexOf(query) !== -1);
+  $('countNum').textContent = list.length;
+  $('countTxt').textContent = list.length === 1 ? 'model found' : 'models found';
+  const grid = $('grid');
+  if (!list.length) { grid.innerHTML = '<div class="empty">No models match your filter.</div>'; return; }
+  grid.innerHTML = '';
+  list.forEach((id, i) => {
+    const d = document.createElement('div');
+    d.className = 'model';
+    d.style.animationDelay = Math.min(i * 20, 400) + 'ms';
+    const info = document.createElement('div');
+    info.className = 'info';
+    const idEl = document.createElement('div');
+    idEl.className = 'id';
+    idEl.textContent = id;
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = 'via ' + $('baseUrl').value.trim().replace(/\/+$/, '');
+    info.appendChild(idEl);
+    info.appendChild(meta);
+    const cp = document.createElement('button');
+    cp.type = 'button';
+    cp.className = 'copy';
+    cp.textContent = 'Copy';
+    cp.onclick = () => {
+      copyText(id);
+      cp.textContent = ' \u2713';
+      setTimeout(() => { cp.textContent = 'Copy'; }, 1200);
+    };
+    d.appendChild(info);
+    d.appendChild(cp);
+    grid.appendChild(d);
+  });
+}
+function copyText(t) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).catch(() => fallbackCopy(t));
+  } else { fallbackCopy(t); }
+}
+function fallbackCopy(t) {
+  const ta = document.createElement('textarea');
+  ta.value = t;
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+}
+$('filter').addEventListener('input', e => renderModels(e.target.value));
+$('copyAll').onclick = () => {
+  copyText(lastModels.join('\n'));
+  const b = $('copyAll');
+  const old = b.innerHTML;
+  b.textContent = '\u2713 Copied';
+  setTimeout(() => { b.innerHTML = old; }, 1200);
+};
+$('dl').onclick = () => {
+  const blob = new Blob([JSON.stringify({ count: lastModels.length, latency_ms: lastMs, models: lastModels }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'keyscope-models.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+};
+</script>
+</body>
+</html>
